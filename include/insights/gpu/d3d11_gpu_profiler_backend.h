@@ -27,7 +27,7 @@ public:
     std::vector<ScopeRecord> CollectFrame()  override;
 
 private:
-    static constexpr int FRAME_LATENCY        = 3;
+    static constexpr int FRAME_LATENCY        = 5;
     static constexpr int MAX_SCOPES_PER_FRAME = 256;
 
     struct ScopeEntry {
