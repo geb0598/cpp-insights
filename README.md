@@ -32,7 +32,7 @@
 
 - **Two-pipe IPC** — A dedicated data pipe (client → server) carries frame payloads; a separate control pipe (server → client) handles session commands, so data flow and session control never share a channel.
 - **Producer-consumer send queue** — `std::mutex` + `std::condition_variable` decouple the game thread from the send worker. The game thread enqueues a frame and returns immediately; a background thread handles transmission.
-- **D3D11 timestamp queries** — Per-scope `ID3D11Query` timestamp pairs are managed in a 3-frame circular buffer to absorb GPU pipeline latency. A disjoint query detects GPU context loss and discards corrupted samples.
+- **D3D11 timestamp queries** — Per-scope `ID3D11Query` timestamp pairs are managed in a 5-frame circular buffer to absorb GPU pipeline latency. A disjoint query detects GPU context loss and discards corrupted samples.
 - **Unified CPU / GPU timeline** — GPU ticks are converted to nanoseconds using the disjoint query frequency and a calibrated base tick, placing CPU and GPU scopes on the same time axis.
 - **Custom binary serialization** — A single `Archive` base class unifies serialization and deserialization into one `operator<<` chain via an `IsLoading()` flag, with no external libraries.
 
