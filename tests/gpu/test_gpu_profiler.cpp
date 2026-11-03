@@ -420,7 +420,7 @@ TEST_F(GpuProfilerTest, FaultContextWithoutFaultsIsTransparent) {
 // Each test below fails until its Bug issue is fixed; the fix removes the DISABLED_
 // prefix. Run them with --gtest_also_run_disabled_tests.
 
-// Bug: (draft, not filed yet) GPU base tick is not paired with a CPU instant.
+// Bug #10: GPU calibration tick is not paired with a CPU instant.
 // The backend takes its calibration tick as recording start. Here the session command
 // lands between the GPU and CPU halves of INSIGHTS_FRAME_BEGIN, so the GPU calibrates
 // one frame late and every GPU scope is drawn that much too early.
@@ -442,7 +442,7 @@ TEST_F(GpuProfilerTest, DISABLED_CalibrationPairsGpuTickWithCpuInstant) {
     }
 }
 
-// Bug: (draft, not filed yet) A failed calibration does not suppress GPU records.
+// Bug #11: A failed GPU calibration does not suppress GPU records.
 // BeginRecording() returns early without a base tick, and CollectFrame() goes on
 // converting ticks against the stale one (0 on a new backend).
 TEST_F(GpuProfilerTest, DISABLED_FailedCalibrationSuppressesRecords) {
@@ -457,7 +457,7 @@ TEST_F(GpuProfilerTest, DISABLED_FailedCalibrationSuppressesRecords) {
     }
 }
 
-// Bug: (draft, not filed yet) GPU tick deltas are unsigned.
+// Bug #12: GPU tick deltas are computed unsigned.
 // A tick earlier than the calibration tick must convert to a negative time. The
 // subtraction is done in UINT64, so it wraps and the double-to-int64 cast overflows.
 TEST_F(GpuProfilerTest, DISABLED_TickBeforeCalibrationConvertsToNegativeTime) {
@@ -477,7 +477,7 @@ TEST_F(GpuProfilerTest, DISABLED_TickBeforeCalibrationConvertsToNegativeTime) {
     }
 }
 
-// Bug: (draft, not filed yet) The base tick is reused across disjoint intervals.
+// Bug #13: GPU base tick is reused across disjoint intervals.
 // Frequency only holds inside its own disjoint query, but every frame converts
 // (tick - base) with its own Frequency. After the counter changes rate, later frames
 // are scaled by the new rate over time that passed at the old one.
