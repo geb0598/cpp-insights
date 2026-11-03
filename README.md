@@ -3,6 +3,7 @@
   <h1>cpp-insights</h1>
   <p>A real-time C++ performance profiling framework for games and real-time applications</p>
 
+  [![CI](https://github.com/geb0598/cpp-insights/actions/workflows/ci.yml/badge.svg)](https://github.com/geb0598/cpp-insights/actions/workflows/ci.yml)
   [![Platform](https://img.shields.io/badge/platform-Windows-blue?logo=windows)](https://www.microsoft.com/windows)
   [![C++](https://img.shields.io/badge/C%2B%2B-17-blue?logo=cplusplus)](https://en.cppreference.com)
   [![License](https://img.shields.io/badge/license-MIT-green)](LICENSE)

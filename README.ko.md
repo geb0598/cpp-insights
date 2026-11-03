@@ -3,6 +3,7 @@
   <h1>cpp-insights</h1>
   <p>게임 및 실시간 애플리케이션을 위한 C++ 실시간 성능 프로파일링 프레임워크</p>
 
+  [![CI](https://github.com/geb0598/cpp-insights/actions/workflows/ci.yml/badge.svg)](https://github.com/geb0598/cpp-insights/actions/workflows/ci.yml)
   [![Platform](https://img.shields.io/badge/platform-Windows-blue?logo=windows)](https://www.microsoft.com/windows)
   [![C++](https://img.shields.io/badge/C%2B%2B-17-blue?logo=cplusplus)](https://en.cppreference.com)
   [![License](https://img.shields.io/badge/license-MIT-green)](LICENSE)
