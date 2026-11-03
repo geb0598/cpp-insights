@@ -1,6 +1,7 @@
-// tests/src/test_stat_registry.cpp
 #include <gtest/gtest.h>
+
 #include "insights/insights.h"
+#include "test_support.h"
 
 namespace {
 
@@ -11,85 +12,66 @@ INSIGHTS_DECLARE_STAT("BVH Traverse", STAT_BVH,   STATGROUP_PHYSICS);
 INSIGHTS_DECLARE_STAT("Broad Phase",  STAT_BROAD, STATGROUP_PHYSICS);
 INSIGHTS_DECLARE_STAT("Draw Call",    STAT_DRAW,  STATGROUP_RENDERING);
 
-class StatRegistryTest : public ::testing::Test {
+class StatRegistryTest : public insights::test::InsightsTest {
 protected:
-    void TearDown() override {
-        auto& registry = insights::Registry::GetInstance();
-        registry.Clear();
-        registry.RegisterGroup(&STATGROUP_PHYSICS);
-        registry.RegisterGroup(&STATGROUP_RENDERING);
-        registry.RegisterDescriptor(&STAT_BVH);
-        registry.RegisterDescriptor(&STAT_BROAD);
-        registry.RegisterDescriptor(&STAT_DRAW);
-    }
+    insights::Registry& registry_ = insights::Registry::GetInstance();
 };
 
 TEST_F(StatRegistryTest, GroupRegistered) {
-    auto* group = insights::Registry::GetInstance()
-                      .FindGroup(STATGROUP_PHYSICS.GetId());
+    auto* group = registry_.FindGroup(STATGROUP_PHYSICS.GetId());
     ASSERT_NE(group, nullptr);
+    EXPECT_EQ(group, &STATGROUP_PHYSICS);
     EXPECT_EQ(group->GetName(), "Physics");
 }
 
 TEST_F(StatRegistryTest, DescriptorRegistered) {
-    auto* desc = insights::Registry::GetInstance()
-                     .FindDescriptor(STAT_BVH.GetId());
+    auto* desc = registry_.FindDescriptor(STAT_BVH.GetId());
     ASSERT_NE(desc, nullptr);
+    EXPECT_EQ(desc, &STAT_BVH);
     EXPECT_EQ(desc->GetName(), "BVH Traverse");
 }
 
 TEST_F(StatRegistryTest, GroupContainsDescriptors) {
-    auto* group = insights::Registry::GetInstance()
-                      .FindGroup(STATGROUP_PHYSICS.GetId());
-    ASSERT_NE(group, nullptr);
-    EXPECT_EQ(group->GetDescriptors().size(), 2u);
+    EXPECT_EQ(STATGROUP_PHYSICS.GetDescriptors(),
+              (std::vector<insights::Descriptor::Id>{ STAT_BVH.GetId(), STAT_BROAD.GetId() }));
+    EXPECT_EQ(STATGROUP_RENDERING.GetDescriptors(),
+              (std::vector<insights::Descriptor::Id>{ STAT_DRAW.GetId() }));
 }
 
-TEST_F(StatRegistryTest, SerializeAndDeserialize) {
-    auto& registry = insights::Registry::GetInstance();
-    auto& groups   = registry.GetGroups();
-    auto& descs    = registry.GetDescriptors();
+TEST_F(StatRegistryTest, FrameDescriptorBelongsToFrameGroup) {
+    auto& frame_desc  = insights::Descriptor::GetFrameDescriptor();
+    auto& frame_group = insights::Group::GetFrameGroup();
 
-    int32_t original_group_count = static_cast<int32_t>(groups.size());
-    int32_t original_desc_count  = static_cast<int32_t>(descs.size());
+    EXPECT_EQ(frame_desc.GetId(),  insights::Descriptor::FRAME_ID);
+    EXPECT_EQ(frame_group.GetId(), insights::Group::FRAME_ID);
+    EXPECT_EQ(registry_.FindDescriptor(insights::Descriptor::FRAME_ID), &frame_desc);
+    EXPECT_EQ(registry_.FindGroup(insights::Group::FRAME_ID),           &frame_group);
+    EXPECT_EQ(frame_group.GetDescriptors(),
+              (std::vector<insights::Descriptor::Id>{ insights::Descriptor::FRAME_ID }));
+}
 
-    insights::BinaryWriter writer;
-    writer << original_group_count;
-    for (auto& [id, group] : groups) { writer << *group; }
-    writer << original_desc_count;
-    for (auto& [id, desc] : descs)   { writer << *desc; }
+TEST_F(StatRegistryTest, ConstructionRegistersAndJoinsGroup) {
+    insights::Group      group("Audio");
+    insights::Descriptor desc("Mix", group);
 
-    registry.Clear();
+    EXPECT_NE(group.GetId(), STATGROUP_PHYSICS.GetId());
+    EXPECT_NE(desc.GetId(),  STAT_BVH.GetId());
+    EXPECT_EQ(registry_.FindGroup(group.GetId()),     &group);
+    EXPECT_EQ(registry_.FindDescriptor(desc.GetId()), &desc);
+    EXPECT_EQ(group.GetDescriptors(), (std::vector<insights::Descriptor::Id>{ desc.GetId() }));
+}
 
-    insights::BinaryReader reader(writer.GetBuffer());
+TEST_F(StatRegistryTest, FindUnknownIdReturnsNull) {
+    EXPECT_EQ(registry_.FindGroup(insights::Group::INVALID_ID),           nullptr);
+    EXPECT_EQ(registry_.FindDescriptor(insights::Descriptor::INVALID_ID), nullptr);
+}
 
-    std::vector<std::unique_ptr<insights::Group>>      owned_groups;
-    std::vector<std::unique_ptr<insights::Descriptor>> owned_descs;
+TEST_F(StatRegistryTest, ClearRemovesEverything) {
+    registry_.Clear();
 
-    int32_t g_count;
-    reader << g_count;
-    for (int32_t i = 0; i < g_count; ++i) {
-        auto group = std::make_unique<insights::Group>();
-        reader << *group;
-        registry.RegisterGroup(group.get());
-        owned_groups.push_back(std::move(group));
-    }
-
-    int32_t d_count;
-    reader << d_count;
-    for (int32_t i = 0; i < d_count; ++i) {
-        auto desc = std::make_unique<insights::Descriptor>();
-        reader << *desc;
-        registry.RegisterDescriptor(desc.get());
-        owned_descs.push_back(std::move(desc));
-    }
-
-    EXPECT_EQ(static_cast<int32_t>(registry.GetGroups().size()),      original_group_count);
-    EXPECT_EQ(static_cast<int32_t>(registry.GetDescriptors().size()), original_desc_count);
-
-    auto* physics = registry.FindGroup(STATGROUP_PHYSICS.GetId());
-    ASSERT_NE(physics, nullptr);
-    EXPECT_EQ(physics->GetName(), "Physics");
+    EXPECT_TRUE(registry_.GetGroups().empty());
+    EXPECT_TRUE(registry_.GetDescriptors().empty());
+    EXPECT_EQ(registry_.FindGroup(STATGROUP_PHYSICS.GetId()), nullptr);
 }
 
 } // namespace

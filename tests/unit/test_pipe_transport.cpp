@@ -1,80 +1,170 @@
+#include <atomic>
 #include <future>
-#include <thread>
+#include <string>
 
 #include <gtest/gtest.h>
 
 #include "insights/archive.h"
 #include "insights/pipe_transport.h"
+#include "test_support.h"
 
 namespace {
 
-// class PipeTransportTest : public ::testing::Test {
-// protected:
-//     void SetUp() override {
-//         server_thread_ = std::thread([this]() {
-//             insights::PipeServer server;
+// Each test listens on its own pipe instead of DATA_PIPE_NAME or
+// CONTROL_PIPE_NAME, so the tests never collide with a running viewer or with
+// another test process.
+class PipeTransportTest : public insights::test::InsightsTest {
+protected:
+    void SetUp() override {
+        InsightsTest::SetUp();
 
-//             auto result = server.Listen(insights::DATA_PIPE_NAME, PIPE_ACCESS_INBOUND);
-//             if (!result) {
-//                 server_ready_.set_value(false);
-//                 return;
-//             }
-//             server_ready_.set_value(true);  
+        static std::atomic<int> counter = 0;
+        pipe_name_ = L"\\\\.\\pipe\\cpp-insights-test-" + std::to_wstring(GetCurrentProcessId()) +
+                     L"-" + std::to_wstring(counter++);
+    }
 
-//             result = server.Accept();       
-//             if (!result) {
-//                 receive_done_.set_value(false);
-//                 return;
-//             }
+    // A client can open the pipe as soon as Listen() returns; Accept() then
+    // completes immediately, so no thread is needed to connect.
+    void ConnectPair(DWORD server_access, DWORD client_access) {
+        auto result = server_.Listen(pipe_name_.c_str(), server_access);
+        ASSERT_TRUE(result) << result.error.message();
 
-//             insights::PacketHeader header;
-//             insights::ByteBuffer   payload;
-//             result = server.Receive(header, payload);
-//             if (!result) {
-//                 receive_done_.set_value(false);
-//                 return;
-//             }
+        result = client_.Connect(pipe_name_.c_str(), client_access);
+        ASSERT_TRUE(result) << result.error.message();
 
-//             received_type_ = header.type;
-//             received_data_ = std::move(payload);
-//             receive_done_.set_value(true);
-//         });
+        result = server_.Accept();
+        ASSERT_TRUE(result) << result.error.message();
 
-//         ASSERT_TRUE(server_ready_.get_future().get());
-//     }
+        ASSERT_TRUE(server_.IsConnected());
+        ASSERT_TRUE(client_.IsConnected());
+    }
 
-//     void TearDown() override {
-//         if (server_thread_.joinable()) {
-//             server_thread_.join();
-//         }
-//     }
+    static insights::ByteBuffer MakePayload(size_t size) {
+        insights::ByteBuffer payload(size);
+        for (size_t i = 0; i < size; ++i) {
+            payload[i] = static_cast<std::byte>(i * 31 + 7);
+        }
+        return payload;
+    }
 
-//     std::thread          server_thread_;
-//     std::promise<bool>   server_ready_;
-//     std::promise<bool>   receive_done_;
-//     insights::PacketType  received_type_;
-//     insights::ByteBuffer  received_data_;
-// };
+    std::wstring         pipe_name_;
+    insights::PipeServer server_;
+    insights::PipeClient client_;
+};
 
-// TEST_F(PipeTransportTest, ConnectAndSendHandshake) {
-//     insights::PipeClient client;
-//     auto result = client.Connect();
-//     ASSERT_TRUE(result) << result.error.message();
+TEST_F(PipeTransportTest, ClientSendsHandshakeToServer) {
+    ConnectPair(PIPE_ACCESS_INBOUND, GENERIC_WRITE);
 
-//     insights::BinaryWriter writer;
-//     std::string msg = "hello";
-//     writer << msg;
+    insights::BinaryWriter writer;
+    std::string msg = "hello";
+    writer << msg;
 
-//     result = client.Send(insights::PacketType::HANDSHAKE, writer.GetBuffer());
-//     ASSERT_TRUE(result) << result.error.message();
+    auto result = client_.Send(insights::PacketType::HANDSHAKE, writer.GetBuffer());
+    ASSERT_TRUE(result) << result.error.message();
 
-//     ASSERT_TRUE(receive_done_.get_future().get());
-//     EXPECT_EQ(received_type_, insights::PacketType::HANDSHAKE);
+    insights::PacketHeader header;
+    insights::ByteBuffer   payload;
+    result = server_.Receive(header, payload);
+    ASSERT_TRUE(result) << result.error.message();
 
-//     insights::BinaryReader reader(received_data_);
-//     std::string received_msg;
-//     reader << received_msg;
-//     EXPECT_EQ(msg, received_msg);
-// }
+    EXPECT_EQ(header.type,         insights::PacketType::HANDSHAKE);
+    EXPECT_EQ(header.payload_size, writer.GetBuffer().size());
+
+    insights::BinaryReader reader(payload);
+    std::string received;
+    reader << received;
+    EXPECT_EQ(received, msg);
+}
+
+TEST_F(PipeTransportTest, ServerSendsEmptyPacketToClient) {
+    ConnectPair(PIPE_ACCESS_OUTBOUND, GENERIC_READ);
+
+    auto result = server_.Send(insights::PacketType::SESSION_START, {});
+    ASSERT_TRUE(result) << result.error.message();
+
+    insights::PacketHeader header;
+    insights::ByteBuffer   payload = MakePayload(4);
+    result = client_.Receive(header, payload);
+    ASSERT_TRUE(result) << result.error.message();
+
+    EXPECT_EQ(header.type,         insights::PacketType::SESSION_START);
+    EXPECT_EQ(header.payload_size, 0u);
+    EXPECT_TRUE(payload.empty());
+}
+
+TEST_F(PipeTransportTest, PacketsArriveInOrder) {
+    ConnectPair(PIPE_ACCESS_INBOUND, GENERIC_WRITE);
+
+    ASSERT_TRUE(client_.Send(insights::PacketType::FRAME,        MakePayload(3)));
+    ASSERT_TRUE(client_.Send(insights::PacketType::SESSION_STOP, {}));
+    ASSERT_TRUE(client_.Send(insights::PacketType::FRAME,        MakePayload(5)));
+
+    insights::PacketHeader header;
+    insights::ByteBuffer   payload;
+
+    ASSERT_TRUE(server_.Receive(header, payload));
+    EXPECT_EQ(header.type, insights::PacketType::FRAME);
+    EXPECT_EQ(payload,     MakePayload(3));
+
+    ASSERT_TRUE(server_.Receive(header, payload));
+    EXPECT_EQ(header.type, insights::PacketType::SESSION_STOP);
+    EXPECT_TRUE(payload.empty());
+
+    ASSERT_TRUE(server_.Receive(header, payload));
+    EXPECT_EQ(header.type, insights::PacketType::FRAME);
+    EXPECT_EQ(payload,     MakePayload(5));
+}
+
+TEST_F(PipeTransportTest, PayloadLargerThanPipeBufferArrivesIntact) {
+    ConnectPair(PIPE_ACCESS_INBOUND, GENERIC_WRITE);
+
+    // The pipe buffers 4 KB, so the write blocks until the server reads.
+    auto expected = MakePayload(64 * 1024);
+    auto sent = std::async(std::launch::async, [&]() {
+        return client_.Send(insights::PacketType::FRAME, expected);
+    });
+
+    insights::PacketHeader header;
+    insights::ByteBuffer   payload;
+    auto result = server_.Receive(header, payload);
+    if (!result) {
+        server_.Disconnect(); // unblock the writer before the future waits on it
+    }
+    ASSERT_TRUE(result) << result.error.message();
+    ASSERT_TRUE(sent.get());
+
+    EXPECT_EQ(header.type, insights::PacketType::FRAME);
+    EXPECT_EQ(payload,     expected);
+}
+
+TEST_F(PipeTransportTest, ServerDetectsClientDisconnect) {
+    ConnectPair(PIPE_ACCESS_INBOUND, GENERIC_WRITE);
+
+    client_.Disconnect();
+
+    insights::PacketHeader header;
+    insights::ByteBuffer   payload;
+    auto result = server_.Receive(header, payload);
+
+    EXPECT_FALSE(result);
+    EXPECT_TRUE(result.IsDisconnected()) << result.error.message();
+    EXPECT_FALSE(server_.IsConnected());
+}
+
+TEST_F(PipeTransportTest, ConnectWithoutServerFails) {
+    auto result = client_.Connect(pipe_name_.c_str(), GENERIC_WRITE);
+
+    EXPECT_FALSE(result);
+    EXPECT_EQ(result.error.value(), ERROR_FILE_NOT_FOUND) << result.error.message();
+    EXPECT_FALSE(client_.IsConnected());
+}
+
+TEST_F(PipeTransportTest, SendWithoutConnectionFails) {
+    auto client_result = client_.Send(insights::PacketType::FRAME, MakePayload(1));
+    auto server_result = server_.Send(insights::PacketType::FRAME, MakePayload(1));
+
+    EXPECT_EQ(client_result.error.value(), ERROR_PIPE_NOT_CONNECTED);
+    EXPECT_EQ(server_result.error.value(), ERROR_PIPE_NOT_CONNECTED);
+}
 
 } // namespace

@@ -82,6 +82,7 @@ if(INSIGHTS_BUILD_TESTS)
         tests/unit/test_registry.cpp
         tests/unit/test_reporter.cpp
         tests/unit/test_scope_profiler.cpp
+        tests/unit/test_session.cpp
     )
 
     add_executable(insights-test ${TEST_SOURCES})
@@ -101,6 +102,11 @@ if(INSIGHTS_BUILD_TESTS)
 
     include(GoogleTest)
     gtest_discover_tests(insights-test)
+
+    # gtest_discover_tests runs every test in its own process, which hides state
+    # leaking between tests. Also run the whole suite in one shuffled process.
+    add_test(NAME insights-test.single-process
+             COMMAND insights-test --gtest_shuffle --gtest_repeat=10)
 
     add_subdirectory(tests/integration/game_stub)
     add_subdirectory(tests/integration/gpu_stub)

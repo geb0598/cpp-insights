@@ -42,7 +42,9 @@ docs/troubleshooting/  solved problems: index plus one file per case
 - `ScopeRecord` times are nanoseconds since `ScopeProfiler::GetRecordingStart()`
   on CPU and GPU tracks alike; the flame graph plots them with no alignment.
 - `Registry`, `Reporter`, `ScopeProfiler`, `GpuProfiler`, `Client`, `Server` are
-  singletons. Tests reset the ones they touch in `SetUp()`.
+  singletons. Unit test fixtures derive from `InsightsTest` in
+  `tests/unit/test_support.h`, which clears `Reporter` and `ScopeProfiler` and
+  restores the `Registry` around every test.
 - Descriptor and group IDs come from static counters that `Clear()` does not
   rewind. Never assert or hard-code a literal ID.
 - `Viewer::Render()` indexes `panels_` by position; adding or reordering a panel
