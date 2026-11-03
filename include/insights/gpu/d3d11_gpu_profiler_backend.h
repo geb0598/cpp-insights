@@ -10,6 +10,11 @@ namespace insights {
 // -------------------------------------------------
 // D3D11GpuProfilerBackend
 // -------------------------------------------------
+// Emitted times must be ns since ScopeProfiler::GetRecordingStart(). GPU ticks are
+// an unrelated clock: converting one needs a GPU tick and a CPU instant captured
+// as a pair, Frequency is valid only inside its own disjoint query, tick deltas
+// are int64_t, and a failed calibration must suppress output, because
+// FlameSummary::total_ms spans all tracks and one bad GPU track skews them all.
 class D3D11GpuProfilerBackend : public IGpuProfilerBackend {
 public:
     D3D11GpuProfilerBackend(ID3D11Device* device, ID3D11DeviceContext* context);
@@ -27,6 +32,8 @@ public:
     std::vector<ScopeRecord> CollectFrame()  override;
 
 private:
+    // A slot is read FRAME_LATENCY frames later without flushing; if it is not
+    // ready by then the next BeginFrame() overwrites it. See TS-001.
     static constexpr int FRAME_LATENCY        = 5;
     static constexpr int MAX_SCOPES_PER_FRAME = 256;
 

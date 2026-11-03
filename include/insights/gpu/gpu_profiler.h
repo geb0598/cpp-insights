@@ -41,6 +41,9 @@ private:
     std::unique_ptr<IGpuProfilerBackend> backend_;
     bool                  is_recording_            = false;
     bool                  is_frame_started_        = false;
+    // Session commands arrive on the client's receive thread, but the D3D11
+    // immediate context belongs to the app's render thread. The flag is set
+    // there and consumed by the next BeginFrame() on the render thread.
     std::atomic<bool>     pending_begin_recording_ = false;
 };
 

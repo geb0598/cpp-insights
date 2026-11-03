@@ -11,6 +11,9 @@ namespace insights {
 // -------------------------------------------------
 // Archive 
 // -------------------------------------------------
+// One operator<< serves both directions; keep the read and write paths of every
+// type symmetric. Loaded bytes come from a pipe or a .trace file and are
+// untrusted: check a length against the bytes remaining before allocating.
 class Archive {
 public:
     virtual ~Archive() = default;

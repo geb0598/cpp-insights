@@ -1,0 +1,72 @@
+name: Bug
+description: Code that produces wrong data, crashes, hangs, or mishandles input.
+labels: ["bug"]
+body:
+  - type: dropdown
+    id: area
+    attributes:
+      label: Area
+      options:
+        - SDK - CPU scopes
+        - SDK - GPU (D3D11)
+        - IPC / serialization
+        - Viewer
+        - Build / release
+    validations:
+      required: true
+
+  - type: dropdown
+    id: impact
+    attributes:
+      label: Impact
+      options:
+        - Crash or hang
+        - Wrong data shown
+        - Malformed input not handled
+        - Minor
+    validations:
+      required: true
+
+  - type: textarea
+    id: problem
+    attributes:
+      label: Problem
+      description: What is wrong, in one or two sentences.
+    validations:
+      required: true
+
+  - type: textarea
+    id: scenario
+    attributes:
+      label: Failure scenario
+      description: The thread, input, or state that triggers it, and the wrong value or behavior it produces. Reproduction steps if known.
+    validations:
+      required: true
+
+  - type: textarea
+    id: files
+    attributes:
+      label: Files
+      description: Where the defect is and what is likely to change, e.g. `src/insights/gpu/d3d11_gpu_profiler_backend.cpp:98`.
+    validations:
+      required: true
+
+  - type: textarea
+    id: acceptance
+    attributes:
+      label: Acceptance criteria
+      description: Observable conditions for a correct fix, including the test to add or the manual check with gpu_stub and the viewer.
+    validations:
+      required: true
+
+  - type: textarea
+    id: approach
+    attributes:
+      label: Suggested approach
+      description: Optional. A direction for the fix, if one is already known.
+
+  - type: textarea
+    id: out_of_scope
+    attributes:
+      label: Out of scope
+      description: Optional. Related changes this issue should not include.

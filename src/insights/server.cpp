@@ -130,7 +130,7 @@ void Server::AcceptWorker() {
 
 namespace {
     constexpr uint32_t FILE_MAGIC   = 0x494E5347u; // 'INSG'
-    constexpr uint16_t FILE_VERSION = 1;
+    constexpr uint16_t FILE_VERSION = 1;           // bump on any .trace layout change
 } // namespace
 
 void Server::SaveSession(const std::filesystem::path& path) {

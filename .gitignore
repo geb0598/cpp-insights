@@ -86,3 +86,6 @@ $RECYCLE.BIN/
 
 # ImGui
 imgui.ini
+# Claude Code local overrides
+.claude/settings.local.json
+CLAUDE.local.md
