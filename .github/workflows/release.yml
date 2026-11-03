@@ -1,0 +1,91 @@
+name: Release
+
+# Pushing a tag v<VERSION> builds, tests, packages, and publishes a GitHub Release.
+# Running the workflow by hand is a dry run: it packages and uploads the zips as a
+# workflow artifact, and publishes nothing.
+on:
+  push:
+    tags: ['v*']
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  package:
+    # The presets use the Visual Studio 17 2022 generator.
+    runs-on: windows-2022
+    timeout-minutes: 45
+    outputs:
+      version: ${{ steps.version.outputs.version }}
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Check tag matches project version
+        id: version
+        run: |
+          $match = Select-String -Path CMakeLists.txt -Pattern '^project\(cpp-insights VERSION ([0-9.]+)'
+          if (-not $match) {
+              Write-Output "::error::project(VERSION) not found in CMakeLists.txt"
+              exit 1
+          }
+          $version = $match.Matches[0].Groups[1].Value
+          if ($env:GITHUB_REF_TYPE -eq 'tag' -and $env:GITHUB_REF_NAME -ne "v$version") {
+              Write-Output "::error::Tag $env:GITHUB_REF_NAME does not match project version v$version"
+              exit 1
+          }
+          "version=$version" >> $env:GITHUB_OUTPUT
+
+      # Restore only: release runs reuse the dependencies CI cached on main.
+      - name: Restore dependencies
+        uses: actions/cache/restore@v4
+        with:
+          path: build/debug/_deps
+          key: deps-${{ runner.os }}-${{ hashFiles('**/CMakeLists.txt', 'CMakePresets.json') }}
+
+      # One multi-config build tree holds both configurations, which the SDK package
+      # needs side by side.
+      - name: Configure
+        run: cmake --preset debug
+
+      - name: Build Debug
+        run: cmake --build build/debug --config Debug
+
+      - name: Build Release
+        run: cmake --build build/debug --config Release
+
+      - name: Test Debug
+        run: ctest --test-dir build/debug -C Debug --output-on-failure
+
+      - name: Test Release
+        run: ctest --test-dir build/debug -C Release --output-on-failure
+
+      - name: Package
+        run: cpack --config build/debug/CPackConfig.cmake -C "Debug;Release" -B build/package
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: cpp-insights-${{ steps.version.outputs.version }}
+          path: build/package/*.zip
+          if-no-files-found: error
+
+  publish:
+    needs: package
+    if: github.event_name == 'push' && startsWith(github.ref, 'refs/tags/v')
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          name: cpp-insights-${{ needs.package.outputs.version }}
+          path: dist
+
+      - name: Create release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: >
+          gh release create "$GITHUB_REF_NAME" dist/*.zip
+          --repo "$GITHUB_REPOSITORY" --verify-tag --generate-notes
