@@ -21,12 +21,13 @@ Match the surrounding code; it is consistent and hand-aligned.
 
 ## Commits
 
-Conventional Commits, subject line only, no body. Prefixes in use: `feat`,
-`fix`, `docs`, `refactor`, `chore`.
+Conventional Commits: `<type>: <imperative summary>`, at most 72 characters.
+Types in use: `feat`, `fix`, `docs`, `refactor`, `chore`.
 
-```
-fix: resolve missing GPU profiling data in FLIP_DISCARD mode
-```
+- If the diff explains itself, write the subject line only.
+- Add a body only for what the diff cannot show: why the change was needed, a
+  rejected alternative, a non-obvious consequence, or a linked issue
+  (`Fixes #12`). Wrap at 72 columns.
 
 ## Documentation
 
