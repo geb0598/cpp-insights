@@ -80,3 +80,22 @@ if (EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/data/JetBrainsMonoNerdFont-Regular.ttf")
             "$<TARGET_FILE_DIR:cpp-insights-viewer>/JetBrainsMonoNerdFont-Regular.ttf"
     )
 endif()
+
+# The viewer ships as a Release build only. The font's license (OFL.txt) must
+# accompany it on redistribution.
+install(TARGETS cpp-insights-viewer
+    RUNTIME
+        DESTINATION    .
+        CONFIGURATIONS Release
+        COMPONENT      viewer
+)
+
+install(
+    FILES
+        data/JetBrainsMonoNerdFont-Regular.ttf
+        ${CMAKE_SOURCE_DIR}/LICENSE
+        ${CMAKE_SOURCE_DIR}/OFL.txt
+    DESTINATION    .
+    CONFIGURATIONS Release
+    COMPONENT      viewer
+)

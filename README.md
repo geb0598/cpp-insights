@@ -65,8 +65,8 @@
 
 Download the latest release from [Releases](https://github.com/geb0598/cpp-insights/releases):
 
-- **`cpp-insights-vX.Y.Z-viewer.zip`** — extract and run `cpp-insights-viewer.exe`
-- **`cpp-insights-vX.Y.Z-sdk.zip`** — headers and pre-built libraries for integration
+- **`cpp-insights-X.Y.Z-viewer.zip`** — extract and run `cpp-insights-viewer.exe`
+- **`cpp-insights-X.Y.Z-sdk.zip`** — headers and pre-built libraries for integration
 
 **Visual Studio integration:**
 

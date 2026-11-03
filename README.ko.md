@@ -65,8 +65,8 @@
 
 [Releases](https://github.com/geb0598/cpp-insights/releases)에서 최신 릴리스를 다운로드합니다:
 
-- **`cpp-insights-vX.Y.Z-viewer.zip`** — 압축 해제 후 `cpp-insights-viewer.exe` 실행
-- **`cpp-insights-vX.Y.Z-sdk.zip`** — 연동을 위한 헤더 및 사전 빌드 라이브러리
+- **`cpp-insights-X.Y.Z-viewer.zip`** — 압축 해제 후 `cpp-insights-viewer.exe` 실행
+- **`cpp-insights-X.Y.Z-sdk.zip`** — 연동을 위한 헤더 및 사전 빌드 라이브러리
 
 **Visual Studio 연동:**
 
