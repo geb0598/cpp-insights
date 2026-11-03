@@ -152,6 +152,36 @@ if(INSIGHTS_BUILD_TESTS)
     add_test(NAME insights-test.single-process
              COMMAND insights-test --gtest_shuffle --gtest_repeat=10)
 
+    # The GPU backend runs on a WARP device, so these tests need no GPU.
+    if (TARGET cpp-insights-gpu)
+        add_executable(insights-gpu-test tests/gpu/test_gpu_profiler.cpp)
+
+        target_include_directories(insights-gpu-test
+            PRIVATE
+                ${CMAKE_CURRENT_SOURCE_DIR}/src
+                ${CMAKE_CURRENT_SOURCE_DIR}/tests/unit
+        )
+
+        target_compile_definitions(insights-gpu-test
+            PRIVATE
+                INSIGHTS
+                INSIGHTS_GPU
+        )
+
+        target_link_libraries(insights-gpu-test
+            PRIVATE
+                cpp-insights-gpu
+                d3d11
+                d3dcompiler
+                GTest::gtest_main
+        )
+
+        gtest_discover_tests(insights-gpu-test)
+
+        add_test(NAME insights-gpu-test.single-process
+                 COMMAND insights-gpu-test --gtest_shuffle --gtest_repeat=10)
+    endif()
+
     add_subdirectory(tests/integration/game_stub)
     add_subdirectory(tests/integration/gpu_stub)
 endif()
