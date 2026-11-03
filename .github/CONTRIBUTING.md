@@ -39,6 +39,13 @@ Conventional Commits: `<type>: <imperative summary>`, at most 72 characters.
   rejected alternative, a non-obvious consequence, or a linked issue
   (`Fixes #12`). Wrap at 72 columns.
 
+## Branches
+
+`<type>/<issue>-<short-description>`, using the commit types above, e.g.
+`ci/2-build-and-run-tests`. Omit the issue number when there is none. One
+branch per issue; if an issue needs several, split the issue. Delete the
+branch after it is merged.
+
 ## Documentation
 
 Prefer the code over prose about the code. Each kind of knowledge has one home:
