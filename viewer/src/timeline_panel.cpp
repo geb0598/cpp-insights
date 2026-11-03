@@ -1,4 +1,7 @@
 #define NOMINMAX
+#include <algorithm>
+#include <cmath>
+
 #include <imgui.h>
 #include <implot.h>
 
