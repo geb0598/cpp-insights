@@ -1,5 +1,6 @@
 cmake_minimum_required(VERSION 3.16)
-project(cpp-insights VERSION 1.0.0 LANGUAGES CXX)
+# Releases are tagged v<VERSION>; release.yml refuses a tag that does not match.
+project(cpp-insights VERSION 0.1.3 LANGUAGES CXX)
 
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
@@ -56,6 +57,49 @@ option(INSIGHTS_BUILD_VIEWER "Build viewer" ON)
 if(INSIGHTS_BUILD_VIEWER)
     add_subdirectory(viewer)
 endif()
+
+# -----------------------------------------------
+# Install / package
+# -----------------------------------------------
+# The SDK holds Debug and Release libraries side by side, so both configurations
+# must be built before installing or packaging:
+#   cpack --config build/debug/CPackConfig.cmake -C "Debug;Release"
+install(DIRECTORY include/insights DESTINATION include COMPONENT sdk)
+install(FILES LICENSE DESTINATION . COMPONENT sdk)
+
+set(INSIGHTS_SDK_TARGETS cpp-insights-core)
+if (TARGET cpp-insights-gpu)
+    list(APPEND INSIGHTS_SDK_TARGETS cpp-insights-gpu)
+endif()
+
+foreach(config Debug Release)
+    install(TARGETS ${INSIGHTS_SDK_TARGETS}
+        ARCHIVE
+            DESTINATION    lib/${config}
+            CONFIGURATIONS ${config}
+            COMPONENT      sdk
+    )
+endforeach()
+
+# Debug objects are compiled with /Zi and reference their compiler PDB, which sits
+# next to the .lib. Without it, consumers get LNK4099 and cannot step into the SDK.
+foreach(target ${INSIGHTS_SDK_TARGETS})
+    install(FILES "$<TARGET_FILE_DIR:${target}>/${target}.pdb"
+        DESTINATION    lib/Debug
+        CONFIGURATIONS Debug
+        COMPONENT      sdk
+    )
+endforeach()
+
+set(CPACK_GENERATOR                               ZIP)
+set(CPACK_PACKAGE_FILE_NAME                       "${PROJECT_NAME}-${PROJECT_VERSION}")
+set(CPACK_ARCHIVE_COMPONENT_INSTALL               ON)
+set(CPACK_COMPONENT_INCLUDE_TOPLEVEL_DIRECTORY    ON)
+set(CPACK_COMPONENTS_ALL                          sdk)
+if(INSIGHTS_BUILD_VIEWER)
+    list(APPEND CPACK_COMPONENTS_ALL viewer)
+endif()
+include(CPack)
 
 # -----------------------------------------------
 # Tests

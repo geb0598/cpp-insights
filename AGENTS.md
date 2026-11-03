@@ -11,7 +11,13 @@ cmake --preset debug                                       # tests and stubs bui
 cmake --build build/debug --config Debug
 ctest --test-dir build/debug -C Debug --output-on-failure
 build/debug/Debug/insights-test.exe --gtest_filter=Suite.Name
+cmake --build build/debug --config Release                 # then package both configs:
+cpack --config build/debug/CPackConfig.cmake -C "Debug;Release" -B build/package
 ```
+
+Releases: bump `project(VERSION)` in `CMakeLists.txt` and push tag `v<VERSION>`;
+`.github/workflows/release.yml` builds, tests, and publishes both zips. Running
+that workflow by hand is a dry run that only uploads the zips as an artifact.
 
 The D3D11 backend, `Connection`, and `Client`/`Server` have no automated tests.
 Verify them by hand: start `build/debug/viewer/Debug/cpp-insights-viewer.exe`,
@@ -26,7 +32,6 @@ src/insights/          implementation, including the viewer-side Server and Repo
 viewer/                viewer application (ImGui panels)
 tests/unit/            GoogleTest suites (src/ is on the include path)
 tests/integration/     game_stub, gpu_stub driver apps (loop forever, not in CTest)
-scripts/make_release.py  interactive release packaging into ../releases/<version>/
 docs/troubleshooting/  solved problems: index plus one file per case
 ```
 
