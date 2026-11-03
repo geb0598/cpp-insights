@@ -22,7 +22,17 @@ Match the surrounding code; it is consistent and hand-aligned.
 ## Commits
 
 Conventional Commits: `<type>: <imperative summary>`, at most 72 characters.
-Types in use: `feat`, `fix`, `docs`, `refactor`, `chore`.
+
+| Type | Use for |
+| --- | --- |
+| `feat` | New behavior |
+| `fix` | Bug fix |
+| `refactor` | Code change with no behavior change |
+| `test` | Adding or changing tests only |
+| `build` | CMake, packaging, dependencies |
+| `ci` | GitHub Actions workflows |
+| `docs` | Documentation only |
+| `chore` | Anything else (tooling, housekeeping) |
 
 - If the diff explains itself, write the subject line only.
 - Add a body only for what the diff cannot show: why the change was needed, a
