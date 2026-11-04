@@ -29,7 +29,8 @@ jobs:
       - name: Build
         run: cmake --build build/debug --config Debug
 
-      # Includes insights-test.single-process, which runs the whole suite shuffled
-      # in one process to catch state leaking between tests (see CMakeLists.txt).
+      # Includes the *.single-process tests, which run each suite shuffled in one
+      # process to catch state leaking between tests (see CMakeLists.txt), and
+      # insights-gpu-test, which needs no GPU because it runs on WARP.
       - name: Test
         run: ctest --test-dir build/debug -C Debug --output-on-failure
