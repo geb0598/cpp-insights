@@ -18,6 +18,8 @@ Match the surrounding code; it is consistent and hand-aligned.
   ```
 
 - Singletons delete copy and move constructors and assignment operators.
+- Include the standard header for every `std::` facility a file uses. CI's MSVC
+  does not pull headers in transitively the way older versions do (TS-002).
 
 ## Commits
 

@@ -63,6 +63,9 @@ docs/troubleshooting/  solved problems: index plus one file per case
   rewind. Never assert or hard-code a literal ID.
 - `Viewer::Render()` indexes `panels_` by position; adding or reordering a panel
   means updating `Init()` and `Render()` together.
+- Put worktrees and build trees on a short path outside `%TEMP%`, such as
+  `C:\wt\<branch>`. Deep paths fail with `FTK1011` (TS-003); under `%TEMP%`,
+  MSBuild can skip relinks without an error (TS-004).
 
 ## Where to look
 
