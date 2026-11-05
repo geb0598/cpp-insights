@@ -186,4 +186,25 @@ if(INSIGHTS_BUILD_TESTS)
 
     add_subdirectory(tests/integration/game_stub)
     add_subdirectory(tests/integration/gpu_stub)
+
+    # Both run game-stub as a child process through tests/integration/stub_session.h.
+    add_executable(insights-ipc-test tests/integration/test_ipc_e2e.cpp)
+    add_executable(record-fixture    tests/integration/record_fixture.cpp)
+
+    foreach(target insights-ipc-test record-fixture)
+        target_include_directories(${target} PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/src)
+        target_compile_definitions(${target}
+            PRIVATE
+                INSIGHTS
+                INSIGHTS_GAME_STUB_PATH="$<TARGET_FILE:game-stub>"
+        )
+        add_dependencies(${target} game-stub)
+    endforeach()
+
+    target_include_directories(insights-ipc-test PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/tests/unit)
+
+    target_link_libraries(insights-ipc-test PRIVATE cpp-insights-core GTest::gtest_main)
+    target_link_libraries(record-fixture    PRIVATE cpp-insights-core)
+
+    gtest_discover_tests(insights-ipc-test PROPERTIES TIMEOUT 30)
 endif()

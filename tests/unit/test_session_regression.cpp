@@ -8,6 +8,12 @@
 // game_stub_v1.trace holds the CPU track of `game-stub --frames 125`, recorded by a
 // Server that started the session as soon as the stub connected.
 //
+// record-fixture (tests/integration/record_fixture.cpp) records under these same
+// conditions and never overwrites a file. After bumping FILE_VERSION to N, run:
+//   build\debug\Debug\record-fixture.exe tests\fixtures\game_stub_vN.trace
+// Then add "game_stub_vN" to INSTANTIATE_TEST_SUITE_P below and write only its
+// snapshots, with the commands below and --gtest_filter=*SessionRegressionTest*/game_stub_vN.
+//
 // Snapshots are <fixture>.<summary>.txt next to the fixture. After an intended change
 // to the analysis, rewrite them, then review the diff before committing:
 //   set INSIGHTS_UPDATE_SNAPSHOTS=1
