@@ -2,6 +2,7 @@
 #include <atomic>
 #include <chrono>
 #include <cstdlib>
+#include <cstring>
 #include <iostream>
 #include <thread>
 #include <vector>
@@ -157,7 +158,18 @@ INSIGHTS_DECLARE_STAT("GpuShadow",    STAT_GPU_SHADOW, STATGROUP_RENDERING);
 INSIGHTS_DECLARE_STAT("GpuOpaque",    STAT_GPU_OPAQUE, STATGROUP_RENDERING);
 INSIGHTS_DECLARE_STAT("GpuParticles", STAT_GPU_FX,     STATGROUP_RENDERING);
 
-int main() {
+int main(int argc, char** argv) {
+    // --frames N: run N frames, then exit with code 0. Without it, run until killed.
+    int frame_count = -1;
+    for (int i = 1; i < argc; ++i) {
+        if (std::strcmp(argv[i], "--frames") == 0 && i + 1 < argc && std::atoi(argv[i + 1]) > 0) {
+            frame_count = std::atoi(argv[++i]);
+        } else {
+            std::cerr << "usage: game-stub [--frames N]\n";
+            return 1;
+        }
+    }
+
     std::cout << "Connecting to viewer...\n";
 
     insights::GpuProfiler::GetInstance().Init(
@@ -167,7 +179,7 @@ int main() {
     std::cout << "Connect thread started. Running game loop...\n";
 
     int frame = 0;
-    while (true) {
+    while (frame_count < 0 || frame < frame_count) {
         INSIGHTS_FRAME_BEGIN();
         {
             INSIGHTS_SCOPE(STAT_PHYSICS);

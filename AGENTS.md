@@ -36,7 +36,9 @@ src/insights/          implementation, including the viewer-side Server and Repo
 viewer/                viewer application (ImGui panels)
 tests/unit/            GoogleTest suites (src/ is on the include path)
 tests/gpu/             insights-gpu-test: GpuProfiler and the D3D11 backend on WARP
-tests/integration/     game_stub, gpu_stub driver apps (loop forever, not in CTest)
+tests/fixtures/        recorded .trace files and summary snapshots; never re-record one
+tests/integration/     game_stub, gpu_stub driver apps (run until killed, or --frames N;
+                       not in CTest)
 docs/troubleshooting/  solved problems: index plus one file per case
 ```
 

@@ -7,6 +7,7 @@
 
 #include <chrono>
 #include <cstdlib>
+#include <cstring>
 #include <iostream>
 #include <thread>
 
@@ -101,7 +102,18 @@ static void BusyWait(int microseconds) {
     while (std::chrono::steady_clock::now() < end) {}
 }
 
-int main() {
+int main(int argc, char** argv) {
+    // --frames N: run N frames, then exit with code 0. Without it, run until the window closes.
+    int frame_count = -1;
+    for (int i = 1; i < argc; ++i) {
+        if (std::strcmp(argv[i], "--frames") == 0 && i + 1 < argc && std::atoi(argv[i + 1]) > 0) {
+            frame_count = std::atoi(argv[++i]);
+        } else {
+            std::cerr << "usage: gpu-stub [--frames N]\n";
+            return 1;
+        }
+    }
+
     std::cout << "Starting DX11 GPU Stub...\n";
 
     HINSTANCE hinstance = GetModuleHandleW(nullptr);
@@ -272,8 +284,9 @@ int main() {
         context->VSSetConstantBuffers(0, 1, cb.GetAddressOf());
     };
 
-    MSG msg = {};
-    while (g_is_running) {
+    MSG msg   = {};
+    int frame = 0;
+    while (g_is_running && (frame_count < 0 || frame < frame_count)) {
         while (PeekMessageW(&msg, nullptr, 0, 0, PM_REMOVE)) {
             TranslateMessage(&msg);
             DispatchMessageW(&msg);
@@ -409,6 +422,7 @@ int main() {
             }
         }
         INSIGHTS_FRAME_END();
+        ++frame;
     }
 
     INSIGHTS_SHUTDOWN();
