@@ -21,9 +21,11 @@ Releases: bump `project(VERSION)` in `CMakeLists.txt` and push tag `v<VERSION>`;
 that workflow by hand is a dry run that only uploads the zips as an artifact.
 
 `insights-gpu-test` runs `GpuProfiler` and the D3D11 backend on WARP with no swap
-chain; its `DISABLED_` tests are open calibration bugs, each naming its issue. Real
-GPUs, swap-chain behavior (TS-001), `Connection`, and `Client`/`Server` have no
-automated tests. Verify them by hand: start
+chain; its `DISABLED_` tests are open calibration bugs, each naming its issue.
+`insights-ipc-test` runs `game-stub --frames N` against an in-process `Server` on
+pipes suffixed by `INSIGHTS_PIPE_SUFFIX`, so it is safe beside an open viewer.
+Real GPUs, swap-chain behavior (TS-001), and the viewer UI have no automated
+tests. Verify them by hand: start
 `build/debug/viewer/Debug/cpp-insights-viewer.exe`, then
 `build/debug/tests/integration/gpu_stub/Debug/gpu-stub.exe`, press record, and
 inspect the flame graph. Say what you could not verify.
@@ -38,7 +40,7 @@ tests/unit/            GoogleTest suites (src/ is on the include path)
 tests/gpu/             insights-gpu-test: GpuProfiler and the D3D11 backend on WARP
 tests/fixtures/        recorded .trace files and summary snapshots; never re-record one
 tests/integration/     game_stub, gpu_stub driver apps (run until killed, or --frames N;
-                       not in CTest)
+                       not in CTest); insights-ipc-test; record-fixture for new fixtures
 docs/troubleshooting/  solved problems: index plus one file per case
 ```
 
