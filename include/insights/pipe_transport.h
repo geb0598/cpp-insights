@@ -1,6 +1,7 @@
 #pragma once
 
 #include <mutex>
+#include <string>
 
 #include "insights/transport.h"
 
@@ -9,6 +10,12 @@ namespace insights {
 #if defined(_WIN32)
 constexpr wchar_t DATA_PIPE_NAME[]    = L"\\\\.\\pipe\\cpp-insights-data";
 constexpr wchar_t CONTROL_PIPE_NAME[] = L"\\\\.\\pipe\\cpp-insights-control";
+
+// If this variable is set and not empty, Client and Server append "-<value>" to both
+// pipe names, so a test can run its own pair beside a viewer. Child processes inherit it.
+constexpr wchar_t PIPE_SUFFIX_ENV[]   = L"INSIGHTS_PIPE_SUFFIX";
+
+std::wstring GetPipeName(const wchar_t* base_name);
 #endif
 
 // -------------------------------------------------

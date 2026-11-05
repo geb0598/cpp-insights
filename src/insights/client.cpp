@@ -65,6 +65,9 @@ void Client::OnDisconnected() {
 }
 
 void Client::ConnectWorker() {
+    auto data_pipe_name    = GetPipeName(DATA_PIPE_NAME);
+    auto control_pipe_name = GetPipeName(CONTROL_PIPE_NAME);
+
     while (IsClientRunning()) {
         if (!IsDisconnected()) {
             std::this_thread::sleep_for(std::chrono::milliseconds(100));
@@ -73,13 +76,13 @@ void Client::ConnectWorker() {
 
         StopWorkers();
 
-        auto data_result = data_pipe_.Connect(DATA_PIPE_NAME, GENERIC_WRITE);
+        auto data_result = data_pipe_.Connect(data_pipe_name.c_str(), GENERIC_WRITE);
         if (!data_result) {
             std::this_thread::sleep_for(std::chrono::milliseconds(500));
             continue;
         }
 
-        auto control_result = control_pipe_.Connect(CONTROL_PIPE_NAME, GENERIC_READ);
+        auto control_result = control_pipe_.Connect(control_pipe_name.c_str(), GENERIC_READ);
         if (!control_result) {
             data_pipe_.Disconnect();
             std::this_thread::sleep_for(std::chrono::milliseconds(500));

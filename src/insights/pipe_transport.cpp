@@ -8,6 +8,20 @@ namespace insights {
 
 #if defined(_WIN32)
 
+std::wstring GetPipeName(const wchar_t* base_name) {
+    std::wstring name(base_name);
+
+    DWORD size = GetEnvironmentVariableW(PIPE_SUFFIX_ENV, nullptr, 0);
+    if (size <= 1) {
+        return name;
+    }
+
+    std::wstring suffix(size, L'\0');
+    size = GetEnvironmentVariableW(PIPE_SUFFIX_ENV, suffix.data(), size);
+    suffix.resize(size);
+    return name + L"-" + suffix;
+}
+
 void UniquePipeHandle::Reset(HandleType handle) {
     if (handle_ != INVALID_HANDLE) {
         CancelIoEx(handle_, nullptr);
