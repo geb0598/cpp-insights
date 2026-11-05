@@ -127,6 +127,7 @@ if(INSIGHTS_BUILD_TESTS)
         tests/unit/test_reporter.cpp
         tests/unit/test_scope_profiler.cpp
         tests/unit/test_session.cpp
+        tests/unit/test_session_regression.cpp
     )
 
     add_executable(insights-test ${TEST_SOURCES})
@@ -136,6 +137,7 @@ if(INSIGHTS_BUILD_TESTS)
     target_compile_definitions(insights-test
         PRIVATE
             INSIGHTS
+            INSIGHTS_FIXTURE_DIR="${CMAKE_CURRENT_SOURCE_DIR}/tests/fixtures"
     )
 
     target_link_libraries(insights-test

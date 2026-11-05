@@ -1,0 +1,22 @@
+track 0 frames 124
+  Frame <- - depth 0 count 124
+    inclusive avg 12.397157 min 12.304600 max 14.734400 p95 12.366100 p99 14.720100
+    exclusive avg 0.004715 min 0.001400 max 0.013100 p95 0.009000 p99 0.012500
+  PhysicsUpdate <- Frame depth 1 count 124
+    inclusive avg 3.107097 min 3.101300 max 3.181200 p95 3.112600 p99 3.118700
+    exclusive avg 1.802381 min 1.800400 max 1.872900 p95 1.803300 p99 1.805000
+  DrawCall <- Frame depth 1 count 124
+    inclusive avg 8.607447 min 8.601600 max 8.655900 p95 8.616300 p99 8.644600
+    exclusive avg 7.806689 min 7.801400 max 7.854700 p95 7.814800 p99 7.844000
+  AIUpdate <- Frame depth 1 count 124
+    inclusive avg 0.677898 min 0.600000 max 3.000400 p95 0.601000 p99 3.000200
+    exclusive avg 0.677898 min 0.600000 max 3.000400 p95 0.601000 p99 3.000200
+  BVHTraverse <- PhysicsUpdate depth 2 count 124
+    inclusive avg 1.304716 min 1.300800 max 1.313700 p95 1.309200 p99 1.313100
+    exclusive avg 0.904234 min 0.900700 max 0.913100 p95 0.908300 p99 0.910900
+  ShadowPass <- DrawCall depth 2 count 124
+    inclusive avg 0.800758 min 0.800100 max 0.814600 p95 0.801800 p99 0.802500
+    exclusive avg 0.800758 min 0.800100 max 0.814600 p95 0.801800 p99 0.802500
+  Collision <- BVHTraverse depth 3 count 124
+    inclusive avg 0.400482 min 0.400100 max 0.403300 p95 0.401100 p99 0.402200
+    exclusive avg 0.400482 min 0.400100 max 0.403300 p95 0.401100 p99 0.402200
