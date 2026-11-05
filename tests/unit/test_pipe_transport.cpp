@@ -167,4 +167,27 @@ TEST_F(PipeTransportTest, SendWithoutConnectionFails) {
     EXPECT_EQ(server_result.error.value(), ERROR_PIPE_NOT_CONNECTED);
 }
 
+// -------------------------------------------------
+// GetPipeName
+// -------------------------------------------------
+class GetPipeNameTest : public insights::test::InsightsTest {
+protected:
+    void TearDown() override {
+        SetEnvironmentVariableW(insights::PIPE_SUFFIX_ENV, nullptr);
+        InsightsTest::TearDown();
+    }
+};
+
+TEST_F(GetPipeNameTest, AppendsSuffixOnlyWhenSet) {
+    SetEnvironmentVariableW(insights::PIPE_SUFFIX_ENV, nullptr);
+    EXPECT_EQ(insights::GetPipeName(insights::DATA_PIPE_NAME), insights::DATA_PIPE_NAME);
+
+    SetEnvironmentVariableW(insights::PIPE_SUFFIX_ENV, L"");
+    EXPECT_EQ(insights::GetPipeName(insights::DATA_PIPE_NAME), insights::DATA_PIPE_NAME);
+
+    SetEnvironmentVariableW(insights::PIPE_SUFFIX_ENV, L"test-42");
+    EXPECT_EQ(insights::GetPipeName(insights::CONTROL_PIPE_NAME),
+              std::wstring(insights::CONTROL_PIPE_NAME) + L"-test-42");
+}
+
 } // namespace

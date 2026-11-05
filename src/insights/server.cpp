@@ -22,12 +22,12 @@ std::filesystem::path Server::GenerateSessionFilename() {
 void Server::Listen() {
     StopWorkers();
 
-    auto data_result = data_pipe_.Listen(DATA_PIPE_NAME, PIPE_ACCESS_INBOUND);
+    auto data_result = data_pipe_.Listen(GetPipeName(DATA_PIPE_NAME).c_str(), PIPE_ACCESS_INBOUND);
     if (!data_result) {
         return;
     }
 
-    auto control_result = control_pipe_.Listen(CONTROL_PIPE_NAME, PIPE_ACCESS_OUTBOUND);
+    auto control_result = control_pipe_.Listen(GetPipeName(CONTROL_PIPE_NAME).c_str(), PIPE_ACCESS_OUTBOUND);
     if (!control_result) {
         data_pipe_.Disconnect();
         return;
